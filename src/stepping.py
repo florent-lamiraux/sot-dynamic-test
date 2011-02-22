@@ -7,25 +7,20 @@
 #
 
 from math import sqrt, cos, sin, pi
-from dynamic_graph.sot.core import RobotSimu, VectorConstant, MatrixConstant, RPYToMatrix, Derivator_of_Vector, FeatureGeneric, FeatureJointLimits, Compose_R_and_T, Task, Constraint, GainAdaptive, SOT, MatrixHomoToPoseRollPitchYaw
-
-from dynamic_graph.sot import R3, SE3
-from dynamic_graph.sot.se3 import R
-from dynamic_graph.sot.dynamics.humanoid_robot import HumanoidRobot
+from dynamic_graph.sot.se3 import R, R3, SE3
 from dynamic_graph.sot.dynamics.hrp2 import Hrp2Laas
-from dynamic_graph.sot.dynamics.test import Stepper
+from dynamic_graph.sot.dynamics.test import Stepper as StepperEntity
 from dynamic_graph import enableTrace, plug
+from dynamic_graph.sot.dynamics.solver import Solver
 
 def toViewerConfig(config):
     return config + 10*(0.,)
-
-robot = Hrp2Laas("robot")
-rvName = 'hrp'
 
 try:
     import robotviewer
     clt = robotviewer.client()
     hasRobotViewer = True
+    rvName = 'hrp'
 except:
     hasRobotViewer = False
     print "no robotviewer"
@@ -33,70 +28,59 @@ except:
 timeStep = .005
 gravity = 9.81
 
-solver = SOT('solver')
-solver.damping.value = 1e-6
-solver.setNumberDofs(robot.dimension)
-plug(solver.control, robot.device.control)
-plug(robot.device.state, robot.dynamic.position)
+class Stepper(object):
+    signalList = None
+    def __init__(self, robot, solver):
+        self.solver = solver
+        self.robot = robot
+        # Push tasks
+        #  Feet tasks.
+        self.solver.push(self.robot.name + '_task_right-ankle')
+        self.solver.push(self.robot.name + '_task_left-ankle')
 
-# Push tasks
-#  Feet tasks.
-solver.push(robot.name + '_task_right-ankle')
-solver.push(robot.name + '_task_left-ankle')
+        # Center of mass
+        self.robot.featureCom.selec.value = '111'
+        self.solver.push(self.robot.name + '_task_com')
 
-# Center of mass
-robot.featureCom.selec.value = '111'
-solver.push(robot.name + '_task_com')
+        # Head
+        self.robot.gaze.selec.value = '111000'
+        solver.push(self.robot.name + '_task_gaze')
 
-# Head
-robot.gaze.selec.value = '111000'
-solver.push(robot.name + '_task_gaze')
+        self.robot.tasks['right-ankle'].controlGain.value = 200.
+        self.robot.tasks['left-ankle'].controlGain.value = 200.
+        self.robot.tasks['left-ankle'].controlGain.value = 200.
+        self.robot.tasks['gaze'].controlGain.value = 200.
 
-robot.tasks['right-ankle'].controlGain.value = 200.
-robot.tasks['left-ankle'].controlGain.value = 200.
-robot.tasks['left-ankle'].controlGain.value = 200.
-robot.tasks['gaze'].controlGain.value = 200.
+        # Get height of center of mass
+        self.robot.dynamic.com.recompute(0)
+        com = self.robot.dynamic.com.value
+        omega = sqrt(gravity/com[2])
 
-# Get height of center of mass
-robot.dynamic.com.recompute(0)
-com = robot.dynamic.com.value
-omega = sqrt(gravity/com[2])
+        # Get positions of foot centers
+        #
+        ankleWrtFoot = self.robot.dynamic.getAnklePositionInFootFrame()
+        footCenterWrtAnkle = R3(tuple(map(lambda x: -x, ankleWrtFoot)))
+        lf = SE3(self.robot.dynamic.signal("left-ankle").value)*footCenterWrtAnkle
+        # right foot by symmetry
+        ankleWrtFoot = (ankleWrtFoot[0], -ankleWrtFoot[1], ankleWrtFoot[2])
+        footCenterWrtAnkle = R3(tuple(map(lambda x: -x, ankleWrtFoot)))
+        rf = SE3(self.robot.dynamic.signal("right-ankle").value)*footCenterWrtAnkle
 
-# Get positions of foot centers
-#
-ankleWrtFoot = robot.dynamic.getAnklePositionInFootFrame()
-footCenterWrtAnkle = R3(tuple(map(lambda x: -x, ankleWrtFoot)))
-lf = SE3(robot.dynamic.signal("left-ankle").value)*footCenterWrtAnkle
-# right foot by symmetry
-ankleWrtFoot = (ankleWrtFoot[0], -ankleWrtFoot[1], ankleWrtFoot[2])
-footCenterWrtAnkle = R3(tuple(map(lambda x: -x, ankleWrtFoot)))
-rf = SE3(robot.dynamic.signal("right-ankle").value)*footCenterWrtAnkle
+        # Create and plug stepper entity
+        #
+        self.entity = StepperEntity("stepper")
+        self.entity.setLeftFootCenter(lf.toTuple())
+        self.entity.setRightFootCenter(rf.toTuple())
+        self.entity.setLeftAnklePosition(self.robot.leftAnkle.position.value)
+        self.entity.setRightAnklePosition(self.robot.rightAnkle.position.value)
+        self.entity.setCenterOfMass(com)
+        self.entity.setFootWidth(self.robot.dynamic.getSoleWidth())
+        plug(self.entity.comGain, self.robot.comTask.controlGain)
+        plug(self.entity.comReference, self.robot.featureComDes.errorIN)
+        plug(self.entity.zmpReference, self.robot.device.zmp)
+        plug(self.entity.leftAnkleReference, self.robot.leftAnkle.reference)
+        plug(self.entity.rightAnkleReference, self.robot.rightAnkle.reference)
 
-# Create and plug stepper
-#
-stepper = Stepper("stepper")
-stepper.setLeftFootCenter(lf.toTuple())
-stepper.setRightFootCenter(rf.toTuple())
-stepper.setLeftAnklePosition(robot.leftAnkle.position.value)
-stepper.setRightAnklePosition(robot.rightAnkle.position.value)
-stepper.setCenterOfMass(com)
-stepper.setFootWidth(robot.dynamic.getSoleWidth())
-plug(stepper.comGain, robot.comTask.controlGain)
-plug(stepper.comReference, robot.featureComDes.errorIN)
-plug(stepper.zmpReference, robot.device.zmp)
-plug(stepper.leftAnkleReference, robot.leftAnkle.reference)
-plug(stepper.rightAnkleReference, robot.rightAnkle.reference)
-
-def norm(v):
-    return sqrt(reduce(lambda x,y:x + y*y, v, 0.))
-
-class Player (object):
-    """
-    Run a simulation by incrementing time and computing state along time
-    """
-    def __init__(self, signalList):
-        self.signalList = signalList
-        
     def play(self):
         totalTime = 25.
         nbSteps = int(totalTime/timeStep) + 1
@@ -109,16 +93,16 @@ class Player (object):
         for i in xrange(nbSteps):
             print (i)
             if i == 10:
-                stepper.start()
+                self.entity.start()
             t = timeStep*i
-            robot.device.increment(timeStep)
-            config = robot.device.state.value
+            self.robot.device.increment(timeStep)
+            config = self.robot.device.state.value
             path.append(config)
             if hasRobotViewer:
                 clt.updateElementConfig(rvName, toViewerConfig(config))
 
             for signal, j in zip(self.signalList, range(n)):
-                plot[j] = plot[j] + [signal()]
+                plot[j] = plot[j] + [signal(self.robot)]
         return (tuple(path), plot)
 
     def draw(self, plot):
@@ -132,9 +116,32 @@ class Player (object):
             leg = ax[-1].legend((signal.name,))
         pl.show()
 
+def norm(v):
+    return sqrt(reduce(lambda x,y:x + y*y, v, 0.))
+
 
 if __name__ == '__main__':
-    signalList = [robot.comTask,robot.tasks['left-ankle'],robot.tasks['right-ankle']]
-    p = Player(signalList)
-    path, plot = p.play(3.)
+    robot = Hrp2Laas("robot")
+    solver = Solver(robot)
+
+    def errorCom(robot):
+        return norm(robot.comTask.error.value)
+    errorCom.name = 'center of mass'
+
+    def errorLa(robot):
+        return norm(robot.tasks['left-ankle'].error.value)
+    errorLa.name = 'left ankle'
+
+    def errorRa(robot):
+        return norm(robot.tasks['right-ankle'].error.value)
+    errorRa.name = 'right ankle'
+
+    def errorGaze(robot):
+        return norm(robot.tasks['gaze'].error.value)
+    errorGaze.name = 'gaze'
+
+    signalList = [errorCom, errorLa, errorRa, errorGaze]
+    p = Stepper(robot, solver)
+    p.signalList = signalList
+    path, plot = p.play()
     p.draw(plot)
