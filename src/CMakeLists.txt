@@ -38,5 +38,13 @@ PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} sot-dynamic)
 INSTALL(TARGETS ${LIBRARY_NAME} 
   DESTINATION lib)
 
+EXEC_PROGRAM(${PYTHON_EXECUTABLE} ARGS "-c \"from distutils import sysconfig; print sysconfig.get_python_lib(0,0,prefix='')\""
+  OUTPUT_VARIABLE PYTHON_SITELIB
+  )
+
+INSTALL(FILES stepping.py
+  DESTINATION ${PYTHON_SITELIB}/dynamic_graph/sot/dynamics/test
+  )
+
 # Bindings Python
 DYNAMIC_GRAPH_PYTHON_MODULE("sot/dynamics/test" ${LIBRARY_NAME} wrap)
