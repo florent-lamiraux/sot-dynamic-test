@@ -13,6 +13,7 @@
 # received a copy of the GNU Lesser General Public License along with
 # sot-test. If not, see <http://www.gnu.org/licenses/>.
 
+INCLUDE(../cmake/python.cmake)
 # The main include dir
 INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR}/include)
 

@@ -1,4 +1,4 @@
-# 
+#
 # Copyright CNRS-LAAS
 # Author: Florent Lamiraux
 #
@@ -9,9 +9,10 @@
 from math import sqrt, cos, sin, pi
 from dynamic_graph.sot.se3 import R, R3, SE3
 from dynamic_graph.sot.dynamics.hrp2 import Hrp2Laas
-from dynamic_graph.sot.dynamics.test import Stepper as StepperEntity
+from dynamic_graph.sot.dynamics.test import Stepper
 from dynamic_graph import enableTrace, plug
 from dynamic_graph.sot.dynamics.solver import Solver
+from dynamic_graph.tracer_real_time import *
 
 def toViewerConfig(config):
     return config + 10*(0.,)
@@ -28,8 +29,8 @@ except:
 timeStep = .005
 gravity = 9.81
 
-class Stepper(object):
-    signalList = None
+class Motion(object):
+    signalList = []
     def __init__(self, robot, solver):
         self.solver = solver
         self.robot = robot
@@ -42,9 +43,9 @@ class Stepper(object):
         self.robot.featureCom.selec.value = '111'
         self.solver.push(self.robot.name + '_task_com')
 
-        # Head
-        self.robot.gaze.selec.value = '111000'
-        solver.push(self.robot.name + '_task_gaze')
+        # Waist
+        self.robot.waist.selec.value = '111000'
+        solver.push(self.robot.name + '_task_waist')
 
         self.robot.tasks['right-ankle'].controlGain.value = 200.
         self.robot.tasks['left-ankle'].controlGain.value = 200.
@@ -68,18 +69,30 @@ class Stepper(object):
 
         # Create and plug stepper entity
         #
-        self.entity = StepperEntity("stepper")
-        self.entity.setLeftFootCenter(lf.toTuple())
-        self.entity.setRightFootCenter(rf.toTuple())
-        self.entity.setLeftAnklePosition(self.robot.leftAnkle.position.value)
-        self.entity.setRightAnklePosition(self.robot.rightAnkle.position.value)
-        self.entity.setCenterOfMass(com)
-        self.entity.setFootWidth(self.robot.dynamic.getSoleWidth())
-        plug(self.entity.comGain, self.robot.comTask.controlGain)
-        plug(self.entity.comReference, self.robot.featureComDes.errorIN)
-        plug(self.entity.zmpReference, self.robot.device.zmp)
-        plug(self.entity.leftAnkleReference, self.robot.leftAnkle.reference)
-        plug(self.entity.rightAnkleReference, self.robot.rightAnkle.reference)
+        self.stepper = Stepper("stepper")
+        self.stepper.setLeftFootCenter(lf.toTuple())
+        self.stepper.setRightFootCenter(rf.toTuple())
+        self.stepper.setLeftAnklePosition(self.robot.leftAnkle.position.value)
+        self.stepper.setRightAnklePosition(self.robot.rightAnkle.position.value)
+        self.stepper.setCenterOfMass(com)
+        self.stepper.setFootWidth(.25*self.robot.dynamic.getSoleWidth())
+        plug(self.stepper.comGain, self.robot.comTask.controlGain)
+        plug(self.stepper.comReference, self.robot.featureComDes.errorIN)
+        plug(self.stepper.zmpReference, self.robot.device.zmp)
+        plug(self.stepper.leftAnkleReference, self.robot.leftAnkle.reference)
+        plug(self.stepper.rightAnkleReference, self.robot.rightAnkle.reference)
+
+        # Trace signals
+        self.tracer = TracerRealTime('tr')
+        self.tracer.setBufferSize(10485760)
+        self.tracer.open('/tmp/','stepper_','.plot')
+        self.tracer.add('robot_device.zmp','zmp')
+        self.tracer.add('robot_dynamic.com', 'com')
+        self.tracer.add('stepper.leftAnkleReference', 'leftAnkle')
+        self.tracer.add('stepper.rightAnkleReference', 'rightAnkle')
+        self.tracer.add('robot_dynamic.zmp', 'dyn_zmp')
+        self.tracer.start()
+        self.robot.device.after.addSignal('tr.triger')
 
     def play(self):
         totalTime = 25.
@@ -88,12 +101,12 @@ class Stepper(object):
         n = len(self.signalList)
         # Initialize empty list for each task
         plot = n*[[]]
-        
-        
+
+
         for i in xrange(nbSteps):
             print (i)
             if i == 10:
-                self.entity.start()
+                self.stepper.start()
             t = timeStep*i
             self.robot.device.increment(timeStep)
             config = self.robot.device.state.value
@@ -141,7 +154,10 @@ if __name__ == '__main__':
     errorGaze.name = 'gaze'
 
     signalList = [errorCom, errorLa, errorRa, errorGaze]
-    p = Stepper(robot, solver)
-    p.signalList = signalList
-    path, plot = p.play()
-    p.draw(plot)
+    m = Motion(robot, solver)
+
+    m.signalList = signalList
+    path, plot = m.play()
+    m.tracer.dump()
+    m.draw(plot)
+

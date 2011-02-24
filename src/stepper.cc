@@ -260,13 +260,14 @@ namespace dynamicgraph {
 	  centerOfMass_(1) = com(1);
 	  omega_ = sqrt(gravity/centerOfMass_(2));
 	  comPeriod_ = 2*M_PI/omega_;
-	  stepHeight_ = .05*centerOfMass_(2);
+	  stepHeight_ = .02*centerOfMass_(2);
 	}
       }
 
       void Stepper::setFootWidth(const double& inWidth)
       {
 	halfFootWidth_ = .5*inWidth;
+	std::cout << "Half foot width = " << halfFootWidth_ << std::endl;
       }
 
       double& Stepper::computeComGain(double& comGain, const int& inTime)
@@ -315,7 +316,8 @@ namespace dynamicgraph {
 	} else {
 	  zmpRef = centerOfMass_;
 	}
-	//zmpReferenceSOUT.setReady(true);
+	// Express ZMP in waist reference frame.
+	zmpRef(2) = 0.;
 	return zmpRef;
       }
 

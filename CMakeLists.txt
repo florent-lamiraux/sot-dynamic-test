@@ -19,7 +19,6 @@ INCLUDE(cmake/base.cmake)
 INCLUDE(cmake/boost.cmake)
 INCLUDE(cmake/lapack.cmake)
 INCLUDE(cmake/cpack.cmake)
-INCLUDE(cmake/python.cmake)
 
 SET(PROJECT_NAME sot-dynamic-test)
 SET(PROJECT_VERSION 0.1)
