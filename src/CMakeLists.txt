@@ -39,6 +39,7 @@ PKG_CONFIG_USE_DEPENDENCY(${LIBRARY_NAME} sot-dynamic)
 INSTALL(TARGETS ${LIBRARY_NAME} 
   DESTINATION lib)
 
+FINDPYTHON()
 EXEC_PROGRAM(${PYTHON_EXECUTABLE} ARGS "-c \"from distutils import sysconfig; print sysconfig.get_python_lib(0,0,prefix='')\""
   OUTPUT_VARIABLE PYTHON_SITELIB
   )
