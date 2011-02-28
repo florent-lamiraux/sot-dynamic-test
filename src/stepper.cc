@@ -325,10 +325,14 @@ namespace dynamicgraph {
       computeLeftAnkle(MatrixHomogeneous& leftAnklePosition, const int& inTime)
       {
 	leftAnklePosition = leftAnklePosition_;
-	Vector rf = rightFootCenter_;
-	double footHeight = computeFootHeight(rf, zmpReferenceSOUT(inTime));
-	leftAnklePosition(2,3) = leftAnklePosition_(2,3) + footHeight;
-	//leftAnkleReferenceSOUT.setReady(true);
+	if (stepping_) {
+	  double t = timePeriod_*(inTime - startTime_);
+	  if (t > 3*comPeriod_ && t < 9*comPeriod_) {
+	    Vector rf = rightFootCenter_;
+	    double footHeight = computeFootHeight(rf, zmpReferenceSOUT(inTime));
+	    leftAnklePosition(2,3) = leftAnklePosition_(2,3) + footHeight;
+	  }
+	}
 	return leftAnklePosition;
       }
 
@@ -337,10 +341,14 @@ namespace dynamicgraph {
 			const int& inTime)
       {
 	rightAnklePosition = rightAnklePosition_;
-	Vector lf = leftFootCenter_;
-	double footHeight = computeFootHeight(lf, zmpReferenceSOUT(inTime));
-	rightAnklePosition(2,3) = rightAnklePosition_(2,3) + footHeight;
-	//rightAnkleReferenceSOUT.setReady(true);
+	if (stepping_) {
+	  double t = timePeriod_*(inTime - startTime_);
+	  if (t > 3*comPeriod_ && t < 9*comPeriod_) {
+	    Vector lf = leftFootCenter_;
+	    double footHeight = computeFootHeight(lf, zmpReferenceSOUT(inTime));
+	    rightAnklePosition(2,3) = rightAnklePosition_(2,3) + footHeight;
+	  }
+	}
 	return rightAnklePosition;
       }
     } // namespace dynamic
