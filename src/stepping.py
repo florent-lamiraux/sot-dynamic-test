@@ -1,3 +1,4 @@
+#!/usr/bin/python
 #
 # Copyright CNRS-LAAS
 # Author: Florent Lamiraux
@@ -137,9 +138,13 @@ if __name__ == '__main__':
     robot = Hrp2Laas("robot")
     solver = Solver(robot)
 
+    def yCom(robot):
+        return robot.featureCom.errorIN.value[1]
+    yCom.name = 'y center of mass'
+
     def errorCom(robot):
         return norm(robot.comTask.error.value)
-    errorCom.name = 'center of mass'
+    errorCom.name = 'error center of mass'
 
     def errorLa(robot):
         return norm(robot.tasks['left-ankle'].error.value)
@@ -153,7 +158,7 @@ if __name__ == '__main__':
         return norm(robot.tasks['gaze'].error.value)
     errorGaze.name = 'gaze'
 
-    signalList = [errorCom, errorLa, errorRa, errorGaze]
+    signalList = [yCom, errorCom, errorLa, errorRa, errorGaze]
     m = Motion(robot, solver)
 
     m.signalList = signalList
