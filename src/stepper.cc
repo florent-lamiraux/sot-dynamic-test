@@ -45,7 +45,7 @@ namespace dynamicgraph {
 	  }; // Class Start
 	} // namespace stepper
       } // namespace command
-      
+
       DYNAMICGRAPH_FACTORY_ENTITY_PLUGIN(Stepper, "Stepper");
       Stepper::Stepper(const std::string& inName) :
 	Entity(inName),
@@ -187,7 +187,7 @@ namespace dynamicgraph {
 	}
 	return mh;
       }
-      
+
       double Stepper::computeMagnitude(double t)
       {
 	double magnitude = 1;
@@ -205,14 +205,17 @@ namespace dynamicgraph {
 					const Vector& inZmp)
       {
 	double footHeight;
-	double d = sqrt((inFootCenter(0)-inZmp(0))*(inFootCenter(0)-inZmp(0))+
-			(inFootCenter(1)-inZmp(1))*(inFootCenter(1)-inZmp(1)));
-	if (d > halfFootWidth_) {
-	  footHeight = 0.;
+	double y = unit_.scalarProduct(inZmp - centerOfMass_);
+	double yc = unit_.scalarProduct(inFootCenter - centerOfMass_);
+	double dy;
+	if (y*yc > 0 && fabs(y) > fabs(yc)) {
+	  dy = fabs(y) - fabs(yc);
 	} else {
-	  footHeight = stepHeight_*((d-halfFootWidth_)/halfFootWidth_)*
-	    ((d-halfFootWidth_)/halfFootWidth_);
+	  dy = 0;
 	}
+
+	footHeight = stepHeight_*(dy/halfFootWidth_)*
+	  (dy/halfFootWidth_)*(dy/halfFootWidth_);
 	return footHeight;
       }
 
@@ -260,7 +263,9 @@ namespace dynamicgraph {
 	  centerOfMass_(1) = com(1);
 	  omega_ = sqrt(gravity/centerOfMass_(2));
 	  comPeriod_ = 2*M_PI/omega_;
-	  stepHeight_ = .02*centerOfMass_(2);
+	  stepHeight_ = .04*centerOfMass_(2);
+	  distance_ = (lf - rf).norm();
+	  unit_ = (lf - rf)*(1/distance_);
 	}
       }
 
@@ -297,7 +302,8 @@ namespace dynamicgraph {
 	  double magnitude = computeMagnitude(t);
 	  Vector lf = leftFootCenter_;
 	  Vector rf = rightFootCenter_;
-	  comRef = centerOfMass_ + (lf - rf)*(.25*magnitude*sin(omega_*t));
+	    comRef = centerOfMass_ + unit_*(distance_+2*halfFootWidth_)*
+	    (.25*magnitude*sin(omega_*t));
 	} else {
 	  comRef = centerOfMass_;
 	}
@@ -311,8 +317,9 @@ namespace dynamicgraph {
 	  double magnitude = computeMagnitude(t);
 	  Vector lf = leftFootCenter_;
 	  Vector rf = rightFootCenter_;
-	  
-	  zmpRef = centerOfMass_ + (lf - rf)*(.5*magnitude*sin(omega_*t));
+
+	  zmpRef = centerOfMass_ + unit_*(distance_+2*halfFootWidth_)*
+	    (.5*magnitude*sin(omega_*t));
 	} else {
 	  zmpRef = centerOfMass_;
 	}
