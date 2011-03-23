@@ -3,8 +3,8 @@
 # Copyright CNRS-LAAS
 # Author: Florent Lamiraux
 #
-# This script control nao robot in order to make a oscillatory motion of the
-# ZMP between the feet centers and steps in place.
+# This script controls a humanoid robot in order to make a oscillatory
+# motion of the ZMP between the feet centers and steps in place.
 #
 
 from math import sqrt, cos, sin, pi
