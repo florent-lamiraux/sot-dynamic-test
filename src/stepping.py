@@ -15,6 +15,8 @@ from dynamic_graph import enableTrace, plug
 from dynamic_graph.sot.dynamics.solver import Solver
 from dynamic_graph.tracer_real_time import *
 
+rvName = 'hrp'
+
 def toViewerConfig(config):
     return config + 10*(0.,)
 
@@ -22,7 +24,6 @@ try:
     import robotviewer
     clt = robotviewer.client()
     hasRobotViewer = True
-    rvName = 'hrp'
 except:
     hasRobotViewer = False
     print "no robotviewer"
