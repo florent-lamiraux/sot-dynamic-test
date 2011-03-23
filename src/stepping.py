@@ -51,7 +51,6 @@ class Motion(object):
 
         self.robot.tasks['right-ankle'].controlGain.value = 200.
         self.robot.tasks['left-ankle'].controlGain.value = 200.
-        self.robot.tasks['left-ankle'].controlGain.value = 200.
         self.robot.tasks['gaze'].controlGain.value = 200.
 
         # Get height of center of mass
