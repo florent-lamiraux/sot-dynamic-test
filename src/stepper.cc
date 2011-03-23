@@ -20,6 +20,7 @@
 #include <math.h>
 #include "stepper.hh"
 #include <dynamic-graph/command-setter.h>
+#include <dynamic-graph/command-getter.h>
 #include <dynamic-graph/factory.h>
 
 namespace dynamicgraph {
@@ -170,6 +171,27 @@ namespace dynamicgraph {
 	addCommand("start",
 		   new command::stepper::Start(*this, docstring));
 
+	docstring =
+	  "\n"
+	  "    Set step height\n"
+	  "\n"
+	  "      input:\n"
+	  "        a floating point number\n"
+	  "\n";
+	addCommand("setStepHeight",
+		   new dynamicgraph::command::Setter<Stepper, double>
+		   (*this, &Stepper::setStepHeight, docstring));
+
+	docstring =
+	  "\n"
+	  "    Get step height\n"
+	  "\n"
+	  "      return:\n"
+	  "        a floating point number\n"
+	  "\n";
+	addCommand("getStepHeight",
+		   new dynamicgraph::command::Getter<Stepper, double>
+		   (*this, &Stepper::getStepHeight, docstring));
       }
       static MatrixHomogeneous toMatrixHomogeneous(const Matrix& inMatrix)
       {
@@ -263,7 +285,6 @@ namespace dynamicgraph {
 	  centerOfMass_(1) = com(1);
 	  omega_ = sqrt(gravity/centerOfMass_(2));
 	  comPeriod_ = 2*M_PI/omega_;
-	  stepHeight_ = .04*centerOfMass_(2);
 	  distance_ = (lf - rf).norm();
 	  unit_ = (lf - rf)*(1/distance_);
 	}

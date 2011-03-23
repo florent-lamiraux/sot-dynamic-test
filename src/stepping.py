@@ -56,7 +56,8 @@ class Motion(object):
         # Get height of center of mass
         self.robot.dynamic.com.recompute(0)
         com = self.robot.dynamic.com.value
-        omega = sqrt(gravity/com[2])
+        zCom = com[2]
+        omega = sqrt(gravity/zCom)
 
         # Get positions of foot centers
         #
@@ -77,6 +78,7 @@ class Motion(object):
         self.stepper.setRightAnklePosition(self.robot.rightAnkle.position.value)
         self.stepper.setCenterOfMass(com)
         self.stepper.setFootWidth(.25*self.robot.dynamic.getSoleWidth())
+        self.stepper.setStepHeight(.04*zCom)
         plug(self.stepper.comGain, self.robot.comTask.controlGain)
         plug(self.stepper.comReference, self.robot.featureComDes.errorIN)
         plug(self.stepper.zmpReference, self.robot.device.zmp)
