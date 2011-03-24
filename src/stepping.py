@@ -79,6 +79,7 @@ class Motion(object):
         self.stepper.setCenterOfMass(com)
         self.stepper.setFootWidth(.25*self.robot.dynamic.getSoleWidth())
         self.stepper.setStepHeight(.04*zCom)
+        self.stepper.setMaxComGain(200.)
         plug(self.stepper.comGain, self.robot.comTask.controlGain)
         plug(self.stepper.comReference, self.robot.featureComDes.errorIN)
         plug(self.stepper.zmpReference, self.robot.device.zmp)

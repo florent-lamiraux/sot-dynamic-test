@@ -66,6 +66,7 @@ namespace dynamicgraph {
 	magnitude_(0),
 	omega_(0),
 	comPeriod_(0),
+	maxComGain_(10.),
 	stepHeight_(0),
 	timePeriod_(.005)
       {
@@ -192,6 +193,49 @@ namespace dynamicgraph {
 	addCommand("getStepHeight",
 		   new dynamicgraph::command::Getter<Stepper, double>
 		   (*this, &Stepper::getStepHeight, docstring));
+
+	docstring =
+	  "\n"
+	  "    Set maximal gain for center of mass task\n"
+	  "\n"
+	  "      input:\n"
+	  "        a floating point number\n"
+	  "\n";
+	addCommand("setMaxComGain",
+		   new dynamicgraph::command::Setter<Stepper, double>
+		   (*this, &Stepper::setMaxComGain, docstring));
+
+	docstring =
+	  "\n"
+	  "    Get maximal gain for center of mass task\n"
+	  "\n"
+	  "      return:\n"
+	  "        a floating point number\n"
+	  "\n";
+	addCommand("getMaxComGain",
+		   new dynamicgraph::command::Getter<Stepper, double>
+		   (*this, &Stepper::getMaxComGain, docstring));
+	docstring =
+	  "\n"
+	  "    Set sampling time period task\n"
+	  "\n"
+	  "      input:\n"
+	  "        a floating point number\n"
+	  "\n";
+	addCommand("setTimePeriod",
+		   new dynamicgraph::command::Setter<Stepper, double>
+		   (*this, &Stepper::setTimePeriod, docstring));
+
+	docstring =
+	  "\n"
+	  "    Get sampling time period task\n"
+	  "\n"
+	  "      return:\n"
+	  "        a floating point number\n"
+	  "\n";
+	addCommand("getTimePeriod",
+		   new dynamicgraph::command::Getter<Stepper, double>
+		   (*this, &Stepper::getTimePeriod, docstring));
       }
       static MatrixHomogeneous toMatrixHomogeneous(const Matrix& inMatrix)
       {
@@ -306,9 +350,9 @@ namespace dynamicgraph {
 	  // Increase gain from 1 to 100 into one period of oscillation
 	  double a = t/comPeriod_;
 	  if (a < 1.) {
-	    comGain = (1. - a)*1. + a * 200.;
+	    comGain = (1. - a)*1. + a * maxComGain_;
 	  } else {
-	    comGain = 200.;
+	    comGain = maxComGain_;
 	  }
 	} else {
 	  comGain = 1.0;

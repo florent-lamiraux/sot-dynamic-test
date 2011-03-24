@@ -60,6 +60,26 @@ namespace dynamicgraph {
 	{
 	  return stepHeight_;
 	}
+	/// \brief Set maximal gain for center of mass task
+	void setMaxComGain(const double& inMaxComGain)
+	{
+	  maxComGain_ = inMaxComGain;
+	}
+	/// \brief Get maximal gain for center of mass task
+	double getMaxComGain() const
+	{
+	  return maxComGain_;
+	}
+	/// \brief Set sampling time period task
+	void setTimePeriod(const double& inTimePeriod)
+	{
+	  timePeriod_ = inTimePeriod;
+	}
+	/// \brief Get sampling time period task
+	double getTimePeriod() const
+	{
+	  return timePeriod_;
+	}
 	/// \brief Start the stepping motion
 	void start();
 
@@ -113,6 +133,8 @@ namespace dynamicgraph {
 	double omega_;
 	// Period of the center of mass oscillation
 	double comPeriod_;
+	// Maximal gain for the task of center of mass
+	double maxComGain_;
 	// Maximal step height when stepping
 	double stepHeight_;
 	// Time sampling period
