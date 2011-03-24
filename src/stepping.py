@@ -47,7 +47,7 @@ class Motion(object):
 
         # Waist
         self.robot.waist.selec.value = '111000'
-        solver.push(self.robot.name + '_task_waist')
+        self.solver.push(self.robot.name + '_task_waist')
 
         self.robot.tasks['right-ankle'].controlGain.value = 200.
         self.robot.tasks['left-ankle'].controlGain.value = 200.
