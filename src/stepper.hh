@@ -139,11 +139,6 @@ namespace dynamicgraph {
 	double stepHeight_;
 	// Time sampling period
 	double timePeriod_;
-	// distance between foot centers
-	double distance_;
-	// unit vector of direction right foot to left foot centers
-	Vector unit_;
-
       }; // class Stepper
     } // namespace dynamic
   } // namespace sot
