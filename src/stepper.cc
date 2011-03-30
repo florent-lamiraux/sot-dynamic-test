@@ -276,8 +276,9 @@ namespace dynamicgraph {
 	if (d > halfFootWidth_) {
 	  footHeight = 0.;
 	} else {
-	  footHeight = stepHeight_*((d-halfFootWidth_)/halfFootWidth_)*
-	    ((d-halfFootWidth_)/halfFootWidth_);
+	  footHeight = stepHeight_*((halfFootWidth_-d)/halfFootWidth_)*
+	    ((halfFootWidth_-d)/halfFootWidth_)*
+	    ((halfFootWidth_-d)/halfFootWidth_);
 	}
 	return footHeight;
       }
