@@ -13,7 +13,6 @@ from dynamic_graph.sot.dynamics.hrp2 import Hrp2Laas
 from dynamic_graph.sot.dynamics.test import Stepper
 from dynamic_graph import enableTrace, plug
 from dynamic_graph.sot.dynamics.solver import Solver
-from dynamic_graph.tracer_real_time import *
 
 rvName = 'hrp'
 
@@ -87,16 +86,9 @@ class Motion(object):
         plug(self.stepper.rightAnkleReference, self.robot.rightAnkle.reference)
 
         # Trace signals
-        self.tracer = TracerRealTime('tr')
-        self.tracer.setBufferSize(10485760)
-        self.tracer.open('/tmp/','stepper_','.plot')
-        self.tracer.add('robot_device.zmp','zmp')
-        self.tracer.add('robot_dynamic.com', 'com')
+        self.tracer = self.robot.tracer
         self.tracer.add('stepper.leftAnkleReference', 'leftAnkle')
         self.tracer.add('stepper.rightAnkleReference', 'rightAnkle')
-        self.tracer.add('robot_dynamic.zmp', 'dyn_zmp')
-        self.tracer.start()
-        self.robot.device.after.addSignal('tr.triger')
 
     def play(self):
         totalTime = 25.
