@@ -54,11 +54,13 @@ class Motion(object):
         #
         ankleWrtFoot = self.robot.dynamic.getAnklePositionInFootFrame()
         footCenterWrtAnkle = R3(tuple(map(lambda x: -x, ankleWrtFoot)))
-        lf = SE3(self.robot.dynamic.signal("left-ankle").value)*footCenterWrtAnkle
+        lf = SE3(self.robot.dynamic.signal("left-ankle").value)*\
+            footCenterWrtAnkle
         # right foot by symmetry
         ankleWrtFoot = (ankleWrtFoot[0], -ankleWrtFoot[1], ankleWrtFoot[2])
         footCenterWrtAnkle = R3(tuple(map(lambda x: -x, ankleWrtFoot)))
-        rf = SE3(self.robot.dynamic.signal("right-ankle").value)*footCenterWrtAnkle
+        rf = SE3(self.robot.dynamic.signal("right-ankle").value)*\
+            footCenterWrtAnkle
 
         # Create and plug stepper entity
         #
