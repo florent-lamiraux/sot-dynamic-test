@@ -80,9 +80,10 @@ class Motion(object):
         plug(self.stepper.rightAnkleReference, self.robot.rightAnkle.reference)
 
         # Trace signals
-        self.tracer = self.robot.tracer
-        self.tracer.add('stepper.leftAnkleReference', 'leftAnkle')
-        self.tracer.add('stepper.rightAnkleReference', 'rightAnkle')
+        self.robot.initializeTracer ()
+        self.robot.addTrace ('stepper', 'leftAnkleReference')
+        self.robot.addTrace ('stepper', 'rightAnkleReference')
+        self.robot.startTracer ()
 
     def play(self):
         totalTime = 25.
