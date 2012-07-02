@@ -36,21 +36,12 @@ class Motion(object):
         self.solver = solver
         self.robot = robot
         # Push tasks
-        #  Feet tasks.
-        self.solver.push(self.robot.name + '_task_right-ankle')
-        self.solver.push(self.robot.name + '_task_left-ankle')
-
-        # Center of mass
-        self.robot.featureCom.selec.value = '111'
-        self.solver.push(self.robot.name + '_task_com')
-
         # Waist
         self.robot.waist.selec.value = '111000'
-        self.solver.push(self.robot.name + '_task_waist')
-
-        self.robot.tasks['right-ankle'].controlGain.value = 200.
-        self.robot.tasks['left-ankle'].controlGain.value = 200.
-        self.robot.tasks['gaze'].controlGain.value = 200.
+        self.robot.tasks['waist'].controlGain.value = 180.
+        self.solver.remove(robot.tasks ['posture'])
+        self.solver.push(self.robot.tasks ['waist'])
+        self.solver.push(robot.tasks ['posture'])
 
         # Get height of center of mass
         self.robot.dynamic.com.recompute(0)
