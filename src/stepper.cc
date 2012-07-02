@@ -256,12 +256,14 @@ namespace dynamicgraph {
       
       double Stepper::computeMagnitude(double t)
       {
-	double magnitude = 1;
+	double magnitude = 0.;
 	// Increase magnitude from 0 to maximal value into two periods of
 	//oscillation
 	if (t < 2.*comPeriod_) {
 	  magnitude = t/(2.*comPeriod_);
-	} else if (t > 10.*comPeriod_) {
+	} else if (t <= 10.*comPeriod_) {
+	  magnitude = 1.;
+	} else if (t <= 12.*comPeriod_) {
 	  magnitude = (12.*comPeriod_ - t)/(2.*comPeriod_);
 	}
 	return magnitude;
