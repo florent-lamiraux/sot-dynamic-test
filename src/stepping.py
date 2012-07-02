@@ -37,6 +37,7 @@ class Motion(object):
         self.robot = robot
         # Push tasks
         # Waist
+        self.robot.featureCom.selec.value = '111'
         self.robot.waist.selec.value = '111000'
         self.robot.tasks['waist'].controlGain.value = 180.
         self.solver.remove(robot.tasks ['posture'])
