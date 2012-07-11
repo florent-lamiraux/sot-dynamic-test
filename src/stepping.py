@@ -37,7 +37,7 @@ class Motion(object):
         self.robot = robot
         # Push tasks
         # Waist
-        self.robot.featureCom.selec.value = '111'
+        self.robot.comSelec.value = '111'
         self.robot.waist.selec.value = '111000'
         self.robot.tasks['waist'].controlGain.value = 180.
         self.solver.remove(robot.tasks ['posture'])
@@ -45,8 +45,8 @@ class Motion(object):
         self.solver.push(robot.tasks ['posture'])
 
         # Get height of center of mass
-        self.robot.dynamic.com.recompute(0)
-        com = self.robot.dynamic.com.value
+        self.robot.com.recompute(0)
+        com = self.robot.com.value
         self.zCom = com[2]
         omega = sqrt(gravity/self.zCom)
 
@@ -74,8 +74,8 @@ class Motion(object):
         self.stepper.setStepHeight(.08*self.zCom)
         self.stepper.setMaxComGain(200.)
         plug(self.stepper.comGain, self.robot.comTask.controlGain)
-        plug(self.stepper.comReference, self.robot.featureComDes.errorIN)
-        plug(self.stepper.zmpReference, self.robot.device.zmp)
+        plug(self.stepper.comReference, self.robot.comRef)
+        plug(self.stepper.zmpReference, self.robot.zmpRef)
         plug(self.stepper.leftAnkleReference, self.robot.leftAnkle.reference)
         plug(self.stepper.rightAnkleReference, self.robot.rightAnkle.reference)
 
