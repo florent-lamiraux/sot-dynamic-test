@@ -85,6 +85,15 @@ class Motion(object):
         self.robot.addTrace ('stepper', 'rightAnkleReference')
         self.robot.startTracer ()
 
+    def start (self):
+        kx = self.robot.tasks ['balance'].controlGain.value
+        omega2 = self.robot.com.value [2]/gravity
+        kz = .5*kx + sqrt (9*kx**2-8*omega2)/6
+        print ("kx = {0}".format (kx))
+        print ("kz = {0}".format (kz))
+        self.robot.stabilizer.setZmpGain (2.)
+        self.stepper.start ()
+
     def play(self):
         totalTime = 25.
         nbSteps = int(totalTime/timeStep) + 1
@@ -97,7 +106,7 @@ class Motion(object):
         for i in xrange(nbSteps):
             print (i)
             if i == 10:
-                self.stepper.start()
+                self.start()
             t = timeStep*i
             self.robot.device.increment(timeStep)
             config = self.robot.device.state.value
@@ -153,6 +162,6 @@ if __name__ == '__main__':
 
     m.signalList = signalList
     path, plot = m.play()
-    m.tracer.dump()
+    m.robot.stopTracer ()
     m.draw(plot)
 
