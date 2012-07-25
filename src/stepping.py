@@ -40,9 +40,7 @@ class Motion(object):
         self.robot.comSelec.value = '111'
         self.robot.waist.selec.value = '111000'
         self.robot.tasks['waist'].controlGain.value = 180.
-        self.solver.remove(robot.tasks ['posture'])
         self.solver.push(self.robot.tasks ['waist'])
-        self.solver.push(robot.tasks ['posture'])
 
         # Get height of center of mass
         self.robot.com.recompute(0)
