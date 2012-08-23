@@ -37,7 +37,6 @@ class Motion(object):
         self.robot = robot
         # Push tasks
         # Waist
-        self.robot.comSelec.value = '111'
         self.robot.waist.selec.value = '111000'
         self.robot.tasks['waist'].controlGain.value = 180.
         self.solver.remove(robot.tasks ['posture'])
@@ -73,8 +72,8 @@ class Motion(object):
         self.stepper.setFootWidth(.5*self.robot.dynamic.getSoleWidth())
         self.stepper.setStepHeight(.08*self.zCom)
         self.stepper.setMaxComGain(200.)
-        plug(self.stepper.comGain, self.robot.comTask.controlGain)
         plug(self.stepper.comReference, self.robot.comRef)
+        plug(self.stepper.comdot, self.robot.comdot)
         plug(self.stepper.zmpReference, self.robot.zmpRef)
         plug(self.stepper.leftAnkleReference, self.robot.leftAnkle.reference)
         plug(self.stepper.rightAnkleReference, self.robot.rightAnkle.reference)
@@ -86,12 +85,7 @@ class Motion(object):
         self.robot.startTracer ()
 
     def start (self):
-        kx = self.robot.tasks ['balance'].controlGain.value
-        omega2 = self.robot.com.value [2]/gravity
-        kz = .5*kx + sqrt (9*kx**2-8*omega2)/6
-        print ("kx = {0}".format (kx))
-        print ("kz = {0}".format (kz))
-        self.robot.stabilizer.setZmpGain (2.)
+        self.robot.stabilizer.setComGain (2.)
         self.stepper.start ()
 
     def play(self):
@@ -138,11 +132,11 @@ if __name__ == '__main__':
     solver = Solver(robot)
 
     def yCom(robot):
-        return robot.featureCom.errorIN.value[1]
+        return robot.com.value[1]
     yCom.name = 'y center of mass'
 
     def errorCom(robot):
-        return norm(robot.comTask.error.value)
+        return norm(robot.tasks ['com'].error.value)
     errorCom.name = 'error center of mass'
 
     def errorLa(robot):
