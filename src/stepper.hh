@@ -87,6 +87,7 @@ namespace dynamicgraph {
 	// Signal update
 	double& computeComGain(double& comGain, const int& inTime);
 	Vector& computeComRef(Vector& comRef, const int& inTime);
+	Vector& computeComDot(Vector& comDot, const int& inTime);
 	Vector& computeZmpRef(Vector& zmpRef, const int& inTime);
 	MatrixHomogeneous& computeLeftAnkle(MatrixHomogeneous&
 					    leftAnklePosition,
@@ -104,6 +105,8 @@ namespace dynamicgraph {
 	SignalTimeDependent<double, int> comGainSOUT;
 	/// \brief Reference of the center of mass
 	SignalTimeDependent<Vector, int> comReferenceSOUT;
+	/// \brief Reference velocity of the center of mass
+	SignalTimeDependent<Vector, int> comVelocitySOUT;
 	/// \brief Reference of the center of pressure
 	SignalTimeDependent<Vector, int> zmpReferenceSOUT;
 	/// \brief Reference of the left ankle

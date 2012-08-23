@@ -52,6 +52,7 @@ namespace dynamicgraph {
 	Entity(inName),
 	comGainSOUT("Stepper("+inName+")::output(double)::comGain"),
 	comReferenceSOUT("Stepper("+inName+")::output(Vector)::comReference"),
+	comVelocitySOUT("Stepper("+inName+")::output(Vector)::comdot"),
 	zmpReferenceSOUT("Stepper("+inName+")::output(Vector)::zmpReference"),
 	leftAnkleReferenceSOUT("Stepper("+inName+
 			      ")::output(Vector)::leftAnkleReference"),
@@ -72,6 +73,7 @@ namespace dynamicgraph {
       {
 	comGainSOUT.dependencyType = TimeDependency<int>::ALWAYS_READY;
 	comReferenceSOUT.dependencyType = TimeDependency<int>::ALWAYS_READY;
+	comVelocitySOUT.dependencyType = TimeDependency<int>::ALWAYS_READY;
 	zmpReferenceSOUT.dependencyType = TimeDependency<int>::ALWAYS_READY;
 	leftAnkleReferenceSOUT.dependencyType =
 	  TimeDependency<int>::ALWAYS_READY;
@@ -79,6 +81,7 @@ namespace dynamicgraph {
 	  TimeDependency<int>::ALWAYS_READY;
 	signalRegistration(comGainSOUT);
 	signalRegistration(comReferenceSOUT);
+	signalRegistration(comVelocitySOUT);
 	signalRegistration(zmpReferenceSOUT);
 	signalRegistration(leftAnkleReferenceSOUT);
 	signalRegistration(rightAnkleReferenceSOUT);
@@ -87,6 +90,8 @@ namespace dynamicgraph {
 					    this, _1, _2));
 	comReferenceSOUT.setFunction(boost::bind(&Stepper::computeComRef,
 						 this, _1, _2));
+	comVelocitySOUT.setFunction(boost::bind(&Stepper::computeComDot,
+						this, _1, _2));
 	zmpReferenceSOUT.setFunction(boost::bind(&Stepper::computeZmpRef,
 						 this, _1, _2));
 	leftAnkleReferenceSOUT.
@@ -370,6 +375,20 @@ namespace dynamicgraph {
 	  comRef = centerOfMass_;
 	}
 	return comRef;
+      }
+
+      Vector& Stepper::computeComDot(Vector& comDot, const int& inTime)
+      {
+	if (stepping_) {
+	  double t = timePeriod_*(inTime - startTime_);
+	  double magnitude = computeMagnitude(t);
+	  Vector lf = leftFootCenter_;
+	  Vector rf = rightFootCenter_;
+	  comDot = omega_*(lf - rf)*(.25*magnitude*cos(omega_*t));
+	} else {
+	  comDot = 0 * centerOfMass_;
+	}
+	return comDot;
       }
 
       Vector& Stepper::computeZmpRef(Vector& zmpRef, const int& inTime)
