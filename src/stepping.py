@@ -129,14 +129,46 @@ def norm(v):
 
 if __name__ == '__main__':
     robot = Hrp2Laas("robot")
+    # Initialize the zmp signal to the current com.
+    _com = robot.com.value
+    robot.zmpRef.value = (_com[0], _com[1], 0.)
+
+    # Create a solver.
     solver = Solver(robot)
+
+    # Make sure com and feet desired positions match the current
+    # positions.
+    s = ['left-ankle', 'right-ankle']
+    for i in s:
+        robot.dynamic.signal(i).recompute(robot.dynamic.signal(i).time + 1)
+        robot.features[i].reference.value = \
+            robot.dynamic.signal(i).value
+        robot.features[i]._feature.selec.value = '111111'
+        robot.tasks[i].controlGain.value = 180.
+
+    robot.comRef.value = robot.dynamic.com.value
+
+    # Push com and feet tasks.
+    #
+    # The robot is currently in half-sitting, so this script freezes com
+    # and feet position so that the robot will remain stable while the
+    # user program is starting.
+    solver.push (robot.tasks ['com'])
+    for i in s:
+        solver.push (robot.tasks [i])
+    solver.push (robot.tasks ['posture'])
 
     def yCom(robot):
         return robot.com.value[1]
     yCom.name = 'y center of mass'
 
     def errorCom(robot):
-        return norm(robot.tasks ['com'].error.value)
+        com = robot.stabilizer.com.value
+        comDes = robot.stabilizer.comDes.value
+        error = []
+        for x,y in zip (com, comDes):
+            error.append (x - y)
+        return norm(error)
     errorCom.name = 'error center of mass'
 
     def errorLa(robot):
