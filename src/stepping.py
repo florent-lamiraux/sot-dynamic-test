@@ -82,6 +82,7 @@ class Motion(object):
         self.robot.initializeTracer ()
         self.robot.addTrace ('stepper', 'leftAnkleReference')
         self.robot.addTrace ('stepper', 'rightAnkleReference')
+        self.robot.addTrace ('stepper', 'zmpReference')
         self.robot.startTracer ()
 
     def start (self):
