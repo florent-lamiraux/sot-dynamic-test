@@ -80,6 +80,27 @@ namespace dynamicgraph {
 	{
 	  return timePeriod_;
 	}
+	/// Get angular frequency of motion
+	void setAngularFrequency (const double& omega)
+	{
+	  omega_ = omega;
+	  comPeriod_ = 2*M_PI/omega_;
+	}
+	/// Set angular frequency of motion
+	double getAngularFrequency () const
+	{
+	  return omega_;
+	}
+	/// Get magnitude of motion
+	void setMagnitude (const double& magnitude)
+	{
+	  magnitude_ = magnitude;
+	}
+	/// Set magnitude of motion
+	double getMagnitude () const
+	{
+	  return magnitude_;
+	}
 	/// \brief Start the stepping motion
 	void start();
 
@@ -132,7 +153,7 @@ namespace dynamicgraph {
 	bool stepping_;
 	// Magnitude of the center of mass oscillation
 	double magnitude_;
-	// Pulsation of the center of mass oscillation
+	// Angular Frequency of the center of mass oscillation
 	double omega_;
 	// Period of the center of mass oscillation
 	double comPeriod_;
@@ -142,6 +163,9 @@ namespace dynamicgraph {
 	double stepHeight_;
 	// Time sampling period
 	double timePeriod_;
+	// Rotation matrix of Pi/2 along z axis
+	Matrix R_;
+
       }; // class Stepper
     } // namespace dynamic
   } // namespace sot

@@ -69,7 +69,8 @@ namespace dynamicgraph {
 	comPeriod_(0),
 	maxComGain_(10.),
 	stepHeight_(0),
-	timePeriod_(.005)
+	timePeriod_(.005),
+	R_ (3, 3)
       {
 	comGainSOUT.dependencyType = TimeDependency<int>::ALWAYS_READY;
 	comReferenceSOUT.dependencyType = TimeDependency<int>::ALWAYS_READY;
@@ -241,6 +242,51 @@ namespace dynamicgraph {
 	addCommand("getTimePeriod",
 		   new dynamicgraph::command::Getter<Stepper, double>
 		   (*this, &Stepper::getTimePeriod, docstring));
+	docstring =
+	  "\n"
+	  "    Set angular frequency of motion\n"
+	  "\n"
+	  "      input:\n"
+	  "        a floating point number\n"
+	  "\n";
+	addCommand("setAngularFrequency",
+		   new dynamicgraph::command::Setter<Stepper, double>
+		   (*this, &Stepper::setAngularFrequency, docstring));
+
+	docstring =
+	  "\n"
+	  "    Get angular frequency of motion\n"
+	  "\n"
+	  "      return:\n"
+	  "        a floating point number\n"
+	  "\n";
+	addCommand("getAngularFrequency",
+		   new dynamicgraph::command::Getter<Stepper, double>
+		   (*this, &Stepper::getAngularFrequency, docstring));
+	docstring =
+	  "\n"
+	  "    Set magnitude of motion\n"
+	  "\n"
+	  "      input:\n"
+	  "        a floating point number\n"
+	  "\n";
+	addCommand("setMagnitude",
+		   new dynamicgraph::command::Setter<Stepper, double>
+		   (*this, &Stepper::setMagnitude, docstring));
+
+	docstring =
+	  "\n"
+	  "    Get magnitude of motion\n"
+	  "\n"
+	  "      return:\n"
+	  "        a floating point number\n"
+	  "\n";
+	addCommand("getMagnitude",
+		   new dynamicgraph::command::Getter<Stepper, double>
+		   (*this, &Stepper::getMagnitude, docstring));
+	
+	R_.fill (0.);
+	R_ (0, 1) = -1.; R_ (1, 0) = 1.; R_ (2, 2) = 1.;
       }
       static MatrixHomogeneous toMatrixHomogeneous(const Matrix& inMatrix)
       {
@@ -265,11 +311,11 @@ namespace dynamicgraph {
 	// Increase magnitude from 0 to maximal value into two periods of
 	//oscillation
 	if (t < 2.*comPeriod_) {
-	  magnitude = t/(2.*comPeriod_);
+	  magnitude = t/(2.*comPeriod_) * magnitude_;
 	} else if (t <= 10.*comPeriod_) {
-	  magnitude = 1.;
+	  magnitude =  magnitude_;
 	} else if (t <= 12.*comPeriod_) {
-	  magnitude = (12.*comPeriod_ - t)/(2.*comPeriod_);
+	  magnitude = ((12.*comPeriod_ - t) * magnitude_)/(2.*comPeriod_);
 	}
 	return magnitude;
       }
@@ -324,7 +370,6 @@ namespace dynamicgraph {
       {
 	if (!stepping_) {
 	  stepping_ = true;
-	  magnitude_ = 0.;
 	  startTime_ = comReferenceSOUT.getTime();
 	  Vector lf = leftFootCenter_;
 	  Vector rf = rightFootCenter_;
@@ -332,8 +377,6 @@ namespace dynamicgraph {
 	  com = (lf + rf)*.5;
 	  centerOfMass_(0) = com(0);
 	  centerOfMass_(1) = com(1);
-	  omega_ = sqrt(gravity/centerOfMass_(2));
-	  comPeriod_ = 2*M_PI/omega_;
 	}
       }
 
@@ -370,7 +413,9 @@ namespace dynamicgraph {
 	  double magnitude = computeMagnitude(t);
 	  Vector lf = leftFootCenter_;
 	  Vector rf = rightFootCenter_;
-	  comRef = centerOfMass_ + (lf - rf)*(.25*magnitude*sin(omega_*t));
+	  Vector n = 1./(lf - rf).norm ()*(lf - rf);
+
+	  comRef = centerOfMass_ + (R_*n)*(magnitude*sin(omega_*t));
 	} else {
 	  comRef = centerOfMass_;
 	}
@@ -384,7 +429,9 @@ namespace dynamicgraph {
 	  double magnitude = computeMagnitude(t);
 	  Vector lf = leftFootCenter_;
 	  Vector rf = rightFootCenter_;
-	  comDot = omega_*(lf - rf)*(.25*magnitude*cos(omega_*t));
+	  Vector n = 1./(lf - rf).norm ()*(lf - rf);
+
+	  comDot = omega_*(R_*n)*(magnitude*cos(omega_*t));
 	} else {
 	  comDot = 0 * centerOfMass_;
 	}
@@ -398,8 +445,10 @@ namespace dynamicgraph {
 	  double magnitude = computeMagnitude(t);
 	  Vector lf = leftFootCenter_;
 	  Vector rf = rightFootCenter_;
+	  Vector n = 1./(lf - rf).norm ()*(lf - rf);
 	  
-	  zmpRef = centerOfMass_ + (lf - rf)*(.5*magnitude*sin(omega_*t));
+	  zmpRef = centerOfMass_ + (R_*n)*((1.+centerOfMass_ (2)/gravity)*
+					   magnitude*sin(omega_*t));
 	} else {
 	  zmpRef = centerOfMass_;
 	}

@@ -69,7 +69,9 @@ class Motion(object):
         self.stepper.setRightAnklePosition(self.robot.rightAnkle.position.value)
         self.stepper.setCenterOfMass(com)
         self.stepper.setFootWidth(.5*self.robot.dynamic.getSoleWidth())
-        self.stepper.setStepHeight(.08*self.zCom)
+        self.stepper.setStepHeight(0.)
+        self.stepper.setAngularFrequency (2.*pi)
+        self.stepper.setMagnitude (0.)
         self.stepper.setMaxComGain(200.)
         plug(self.stepper.comGain, self.robot.comTask.controlGain)
         plug(self.stepper.comReference, self.robot.comRef)
@@ -81,6 +83,8 @@ class Motion(object):
         self.robot.initializeTracer ()
         self.robot.addTrace ('stepper', 'leftAnkleReference')
         self.robot.addTrace ('stepper', 'rightAnkleReference')
+        self.robot.addTrace (robot.device.name, 'forceLLEG')
+        self.robot.addTrace (robot.device.name, 'forceRLEG')
         self.robot.startTracer ()
 
     def play(self):
