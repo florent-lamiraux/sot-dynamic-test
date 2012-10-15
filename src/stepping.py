@@ -9,7 +9,7 @@
 
 from math import sqrt, cos, sin, pi
 from dynamic_graph.sot.se3 import R, R3, SE3
-from dynamic_graph.sot.dynamics.hrp2 import Hrp2Laas
+from dynamic_graph.sot.hrp2_14.robot import Robot
 from dynamic_graph.sot.dynamics.test import Stepper
 from dynamic_graph import enableTrace, plug
 from dynamic_graph.sot.dynamics.solver import Solver
@@ -123,7 +123,7 @@ def norm(v):
 
 
 if __name__ == '__main__':
-    robot = Hrp2Laas("robot")
+    robot = Robot ("robot")
     solver = Solver(robot)
 
     def yCom(robot):
