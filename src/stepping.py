@@ -41,12 +41,9 @@ class Motion(object):
         self.robot.waist.selec.value = '111000'
         self.robot.tasks['waist'].controlGain.value = 180.
         self.solver.push(self.robot.tasks ['waist'])
-
         # Get height of center of mass
         self.robot.com.recompute(0)
-        com = self.robot.com.value
-        self.zCom = com[2]
-        omega = sqrt(gravity/self.zCom)
+        self.zCom = self.robot.com.value [2]
 
         # Get positions of foot centers
         #
@@ -60,6 +57,8 @@ class Motion(object):
         rf = SE3(self.robot.dynamic.signal("right-ankle").value)*\
             footCenterWrtAnkle
 
+        cf = R(.5)*(lf + rf)
+        com  = (cf [0], cf [1], self.zCom)
         # Create and plug stepper entity
         #
         self.stepper = Stepper("stepper")
@@ -75,6 +74,7 @@ class Motion(object):
         self.stepper.setMaxComGain(200.)
         plug(self.stepper.comGain, self.robot.comTask.controlGain)
         plug(self.stepper.comReference, self.robot.comRef)
+        plug(self.stepper.comdot, self.robot.comdot)
         plug(self.stepper.zmpReference, self.robot.zmpRef)
         plug(self.stepper.leftAnkleReference, self.robot.leftAnkle.reference)
         plug(self.stepper.rightAnkleReference, self.robot.rightAnkle.reference)
