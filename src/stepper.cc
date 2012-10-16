@@ -43,7 +43,21 @@ namespace dynamicgraph {
 	      st.start();
 	      return Value();
 	    }
-	  }; // Class Start
+	  }; // Class Stop
+	  class Stop : public dynamicgraph::command::Command
+	  {
+	  public:
+	    Stop (Stepper& entity, const std::string& docstring) :
+	      Command (entity, std::vector<Value::Type> (), docstring)
+	    {
+	    }
+	    virtual Value doExecute ()
+	    {
+	      Stepper& st = static_cast<Stepper&>(owner());
+	      st.stop ();
+	      return Value ();
+	    }
+	  }; // Class Stop
 	} // namespace stepper
       } // namespace command
       
@@ -64,6 +78,7 @@ namespace dynamicgraph {
 	halfFootWidth_(0),
 	startTime_(0),
 	stepping_(false),
+	stopTime_ (-1.),
 	magnitude_(0),
 	omega_(0),
 	comPeriod_(0),
@@ -177,6 +192,15 @@ namespace dynamicgraph {
 	  "\n";
 	addCommand("start",
 		   new command::stepper::Start(*this, docstring));
+
+	docstring =
+	  "\n"
+	  "    Start decreasing magnitude toward 0\n"
+	  "\n"
+	  "      no input:\n"
+	  "\n";
+	addCommand("stop",
+		   new command::stepper::Stop(*this, docstring));
 
 	docstring =
 	  "\n"
@@ -312,10 +336,14 @@ namespace dynamicgraph {
 	//oscillation
 	if (t < 2.*comPeriod_) {
 	  magnitude = t/(2.*comPeriod_) * magnitude_;
-	} else if (t <= 10.*comPeriod_) {
+	} else if (stopTime_ < 0) {
 	  magnitude =  magnitude_;
-	} else if (t <= 12.*comPeriod_) {
-	  magnitude = ((12.*comPeriod_ - t) * magnitude_)/(2.*comPeriod_);
+	} else if (t <= stopTime_ + 2.*comPeriod_) {
+	  magnitude = ((stopTime_ + 2.*comPeriod_ - t) * magnitude_)/
+	    (2.*comPeriod_);
+	} else {
+	  magnitude = 0;
+	  stepping_ = false;
 	}
 	return magnitude;
       }
@@ -370,6 +398,7 @@ namespace dynamicgraph {
       {
 	if (!stepping_) {
 	  stepping_ = true;
+	  stopTime_ = -1.;
 	  startTime_ = comReferenceSOUT.getTime();
 	  Vector lf = leftFootCenter_;
 	  Vector rf = rightFootCenter_;
@@ -377,6 +406,14 @@ namespace dynamicgraph {
 	  com = (lf + rf)*.5;
 	  centerOfMass_(0) = com(0);
 	  centerOfMass_(1) = com(1);
+	}
+      }
+
+      void Stepper::stop()
+      {
+	if ((stepping_) && (stopTime_ < 0)) {
+	  int time = comGainSOUT.getTime ();
+	  stopTime_ = timePeriod_*(time - startTime_);
 	}
       }
 
@@ -390,8 +427,6 @@ namespace dynamicgraph {
       {
 	if (stepping_) {
 	  double t = timePeriod_*(inTime - startTime_);
-	  if (t > 12*comPeriod_)
-	    stepping_ = false;
 
 	  // Increase gain from 1 to 100 into one period of oscillation
 	  double a = t/comPeriod_;

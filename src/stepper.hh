@@ -103,6 +103,8 @@ namespace dynamicgraph {
 	}
 	/// \brief Start the stepping motion
 	void start();
+	/// Start decreasing magnitude until stop
+	void stop ();
 
       protected:
 	// Signal update
@@ -149,8 +151,10 @@ namespace dynamicgraph {
 	double halfFootWidth_;
 	// Time since beginning of stepping
 	int startTime_;
-	// Whether the motion being executed
+	// Whether the motion is being executed
 	bool stepping_;
+	// Time when the magnitude starts decreasing
+	double stopTime_;
 	// Magnitude of the center of mass oscillation
 	double magnitude_;
 	// Angular Frequency of the center of mass oscillation
