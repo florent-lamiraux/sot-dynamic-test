@@ -8,6 +8,8 @@
 #
 
 from math import sqrt, cos, sin, pi
+from dynamic_graph.tools import addTrace
+from dynamic_graph.tracer_real_time import TracerRealTime
 from dynamic_graph.sot.se3 import R, R3, SE3
 from dynamic_graph.sot.hrp2_14.robot import Robot
 from dynamic_graph.sot.dynamics.test import Stepper
@@ -79,15 +81,22 @@ class Motion(object):
         plug(self.stepper.leftAnkleReference, self.robot.leftAnkle.reference)
         plug(self.stepper.rightAnkleReference, self.robot.rightAnkle.reference)
 
+        # Initialize tracer
+        self.tracer = TracerRealTime('trace')
+        self.tracer.setBufferSize(2**20)
+        self.tracer.open('/tmp/','dg_','.dat')
+        # Recompute trace.triger at each iteration to enable tracing.
+        self.robot.device.after.addSignal('{0}.triger'.format(self.tracer.name))
         # Trace signals
-        self.robot.addTrace (self.robot.device.name, 'forceLLEG')
-        self.robot.addTrace (self.robot.device.name, 'forceRLEG')
-        self.robot.addTrace(self.robot.dynamic.name, 'com')
+        self.addTrace (self.robot.device.name, 'forceLLEG')
+        self.addTrace (self.robot.device.name, 'forceRLEG')
+        self.addTrace(self.robot.dynamic.name, 'com')
 
     def addTrace (self, entityName, signalName):
         addTrace (self.robot, self.tracer, entityName, signalName)
 
     def start (self):
+        self.tracer.start ()
         self.stepper.start ()
 
     def stop (self):
