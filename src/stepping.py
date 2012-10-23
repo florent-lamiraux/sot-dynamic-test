@@ -15,6 +15,7 @@ from dynamic_graph.sot.hrp2_14.robot import Robot
 from dynamic_graph.sot.dynamics.test import Stepper
 from dynamic_graph import enableTrace, plug
 from dynamic_graph.sot.dynamics.solver import Solver
+from dynamic_graph.sot.core import Multiply_of_matrixHomo
 
 rvName = 'hrp'
 
@@ -39,14 +40,16 @@ class Motion(object):
         self.robot = robot
         # Push tasks
         # Waist
-        self.robot.comSelec.value = '111'
         self.robot.waist.selec.value = '111000'
-        self.robot.tasks['waist'].controlGain.value = 180.
+        self.robot.tasks['waist'].controlGain.value = 10.
         self.solver.push(self.robot.tasks ['waist'])
         # Get height of center of mass
         self.robot.com.recompute(0)
         self.zCom = self.robot.com.value [2]
 
+        # Correction of flexibility deviation on waist
+        #
+        self.waistRef = Multiply_of_matrixHomo (robot.name + '_waist_ref')
         # Get positions of foot centers
         #
         ankleWrtFoot = self.robot.dynamic.getAnklePositionInFootFrame()
@@ -70,20 +73,19 @@ class Motion(object):
         self.stepper.setRightAnklePosition(self.robot.rightAnkle.position.value)
         self.stepper.setCenterOfMass(com)
         self.stepper.setFootWidth(.5*self.robot.dynamic.getSoleWidth())
-        self.stepper.setStepHeight(0.)
         self.stepper.setAngularFrequency (2.*pi)
         self.stepper.setMagnitude (0.)
-        self.stepper.setMaxComGain(200.)
+        self.stepper.setMaxComGain(100.)
+        robot.stabilizer.setGain2 ((66.84, 45.57, 22.67, -2.14))
         plug(self.stepper.comGain, self.robot.comTask.controlGain)
         plug(self.stepper.comReference, self.robot.comRef)
         plug(self.stepper.comdot, self.robot.comdot)
-        plug(self.stepper.zmpReference, self.robot.zmpRef)
         plug(self.stepper.leftAnkleReference, self.robot.leftAnkle.reference)
         plug(self.stepper.rightAnkleReference, self.robot.rightAnkle.reference)
 
         # Initialize tracer
         self.tracer = TracerRealTime('trace')
-        self.tracer.setBufferSize(2**20)
+        self.tracer.setBufferSize(2**23)
         self.tracer.open('/tmp/','dg_','.dat')
         # Recompute trace.triger at each iteration to enable tracing.
         self.robot.device.after.addSignal('{0}.triger'.format(self.tracer.name))
@@ -91,6 +93,7 @@ class Motion(object):
         self.addTrace (self.robot.device.name, 'forceLLEG')
         self.addTrace (self.robot.device.name, 'forceRLEG')
         self.addTrace(self.robot.dynamic.name, 'com')
+        self.addTrace(self.robot.device.name, 'robotState')
 
     def addTrace (self, entityName, signalName):
         addTrace (self.robot, self.tracer, entityName, signalName)

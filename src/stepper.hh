@@ -91,6 +91,11 @@ namespace dynamicgraph {
 	{
 	  return magnitude_;
 	}
+	/// \brief Set oscillation direction
+	/// \param direction "longitudinal" or "lateral"
+	/// \return false if wrong input, true if success.
+	void setOscillationDirection (const std::string& direction);
+
 	/// \brief Start the stepping motion
 	void start();
 	/// Start decreasing magnitude until stop

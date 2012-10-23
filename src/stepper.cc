@@ -21,12 +21,14 @@
 #include "stepper.hh"
 #include <dynamic-graph/command-setter.h>
 #include <dynamic-graph/command-getter.h>
+#include <dynamic-graph/command-bind.h>
 #include <dynamic-graph/factory.h>
 
 namespace dynamicgraph {
   namespace sot {
     namespace dynamic {
       static const double gravity = 9.81;
+      using dynamicgraph::command::makeCommandVoid1;
       namespace command {
 	namespace stepper {
 	  using dynamicgraph::command::Value;
@@ -285,8 +287,19 @@ namespace dynamicgraph {
 	addCommand("getMagnitude",
 		   new dynamicgraph::command::Getter<Stepper, double>
 		   (*this, &Stepper::getMagnitude, docstring));
-	
-	R_.fill (0.);
+
+	docstring =
+	  "\n"
+	  "    Set direction of oscillation\n"
+	  "\n"
+	  "      input:\n"
+	  "        a string 'longitudinal', 'lateral' or 'vertical'\n"
+	  "\n";
+	addCommand ("setDirection",
+		    makeCommandVoid1 (*this, &Stepper::setOscillationDirection,
+				      docstring));
+
+	R_.setZero ();
 	R_ (0, 1) = -1.; R_ (1, 0) = 1.; R_ (2, 2) = 1.;
       }
       static MatrixHomogeneous toMatrixHomogeneous(const Matrix& inMatrix)
@@ -378,6 +391,23 @@ namespace dynamicgraph {
 	}
       }
 
+      void Stepper::setOscillationDirection (const std::string& direction)
+      {
+	if (direction == "lateral") {
+	  R_.setZero ();
+	  R_ (0, 0) = 1.; R_ (1, 1) = 1.; R_ (2, 2) = 1.;
+	} else if (direction == "longitudinal") {
+	  R_.setZero ();
+	  R_ (0, 1) = -1.; R_ (1, 0) = 1.; R_ (2, 2) = 1.;
+	} else if (direction == "vertical") {
+	  R_.setZero ();
+	  R_ (0, 0) = 1.; R_ (2, 1) = 1.; R_ (1, 2) = -1.;
+	} else {
+	  throw std::runtime_error
+	    ("input should be 'longitudinal', 'lateral' or vertical.");
+	}
+      }
+
       void Stepper::setFootWidth(const double& inWidth)
       {
 	halfFootWidth_ = .5*inWidth;
@@ -454,15 +484,17 @@ namespace dynamicgraph {
       }
 
       MatrixHomogeneous& Stepper::
-      computeLeftAnkle(MatrixHomogeneous&, const int&)
+      computeLeftAnkle(MatrixHomogeneous& leftAnklePosition, const int&)
       {
-	return  leftAnklePosition_;
+	leftAnklePosition = leftAnklePosition_;
+	return  leftAnklePosition;
       }
 
       MatrixHomogeneous& Stepper::
-      computeRightAnkle(MatrixHomogeneous&, const int&)
+      computeRightAnkle(MatrixHomogeneous& rightAnklePosition, const int&)
       {
-	return rightAnklePosition_;
+	rightAnklePosition = rightAnklePosition_;
+	return rightAnklePosition;
       }
     } // namespace dynamic
   } // namespace sot
