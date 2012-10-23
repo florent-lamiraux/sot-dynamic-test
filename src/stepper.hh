@@ -50,16 +50,6 @@ namespace dynamicgraph {
 	void setLeftFootCenter(const Vector& inFootPosition);
 	/// \brief Set right foot position before stepping
 	void setRightFootCenter(const Vector& inFootPosition);
-	/// \brief Set step height
-	void setStepHeight(const double& inStepHeight)
-	{
-	  stepHeight_ = inStepHeight;
-	}
-	/// \brief Get step height
-	double getStepHeight() const
-	{
-	  return stepHeight_;
-	}
 	/// \brief Set maximal gain for center of mass task
 	void setMaxComGain(const double& inMaxComGain)
 	{
@@ -120,8 +110,6 @@ namespace dynamicgraph {
 					    const int& inTime);
 
       private:
-	double computeFootHeight(const Vector& inFootCenter,
-				 const Vector& inZmp);
 	double computeMagnitude(double t);
 
 	/// \brief control gain of the com task
@@ -163,8 +151,6 @@ namespace dynamicgraph {
 	double comPeriod_;
 	// Maximal gain for the task of center of mass
 	double maxComGain_;
-	// Maximal step height when stepping
-	double stepHeight_;
 	// Time sampling period
 	double timePeriod_;
 	// Rotation matrix of Pi/2 along z axis

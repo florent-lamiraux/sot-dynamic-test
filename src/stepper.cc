@@ -83,7 +83,6 @@ namespace dynamicgraph {
 	omega_(0),
 	comPeriod_(0),
 	maxComGain_(10.),
-	stepHeight_(0),
 	timePeriod_(.005),
 	R_ (3, 3)
       {
@@ -201,28 +200,6 @@ namespace dynamicgraph {
 	  "\n";
 	addCommand("stop",
 		   new command::stepper::Stop(*this, docstring));
-
-	docstring =
-	  "\n"
-	  "    Set step height\n"
-	  "\n"
-	  "      input:\n"
-	  "        a floating point number\n"
-	  "\n";
-	addCommand("setStepHeight",
-		   new dynamicgraph::command::Setter<Stepper, double>
-		   (*this, &Stepper::setStepHeight, docstring));
-
-	docstring =
-	  "\n"
-	  "    Get step height\n"
-	  "\n"
-	  "      return:\n"
-	  "        a floating point number\n"
-	  "\n";
-	addCommand("getStepHeight",
-		   new dynamicgraph::command::Getter<Stepper, double>
-		   (*this, &Stepper::getStepHeight, docstring));
 
 	docstring =
 	  "\n"
@@ -346,22 +323,6 @@ namespace dynamicgraph {
 	  stepping_ = false;
 	}
 	return magnitude;
-      }
-
-      double Stepper::computeFootHeight(const Vector& inFootCenter,
-					const Vector& inZmp)
-      {
-	double footHeight;
-	double d = sqrt((inFootCenter(0)-inZmp(0))*(inFootCenter(0)-inZmp(0))+
-			(inFootCenter(1)-inZmp(1))*(inFootCenter(1)-inZmp(1)));
-	if (d > halfFootWidth_) {
-	  footHeight = 0.;
-	} else {
-	  footHeight = stepHeight_*((halfFootWidth_-d)/halfFootWidth_)*
-	    ((halfFootWidth_-d)/halfFootWidth_)*
-	    ((halfFootWidth_-d)/halfFootWidth_);
-	}
-	return footHeight;
       }
 
       void Stepper::setLeftAnklePosition(const Matrix& inLeftAnklePosition)
@@ -493,34 +454,15 @@ namespace dynamicgraph {
       }
 
       MatrixHomogeneous& Stepper::
-      computeLeftAnkle(MatrixHomogeneous& leftAnklePosition, const int& inTime)
+      computeLeftAnkle(MatrixHomogeneous&, const int&)
       {
-	leftAnklePosition = leftAnklePosition_;
-	if (stepping_) {
-	  double t = timePeriod_*(inTime - startTime_);
-	  if (t > 3*comPeriod_ && t < 9*comPeriod_) {
-	    Vector rf = rightFootCenter_;
-	    double footHeight = computeFootHeight(rf, zmpReferenceSOUT(inTime));
-	    leftAnklePosition(2,3) = leftAnklePosition_(2,3) + footHeight;
-	  }
-	}
-	return leftAnklePosition;
+	return  leftAnklePosition_;
       }
 
       MatrixHomogeneous& Stepper::
-      computeRightAnkle(MatrixHomogeneous& rightAnklePosition,
-			const int& inTime)
+      computeRightAnkle(MatrixHomogeneous&, const int&)
       {
-	rightAnklePosition = rightAnklePosition_;
-	if (stepping_) {
-	  double t = timePeriod_*(inTime - startTime_);
-	  if (t > 3*comPeriod_ && t < 9*comPeriod_) {
-	    Vector lf = leftFootCenter_;
-	    double footHeight = computeFootHeight(lf, zmpReferenceSOUT(inTime));
-	    rightAnklePosition(2,3) = rightAnklePosition_(2,3) + footHeight;
-	  }
-	}
-	return rightAnklePosition;
+	return rightAnklePosition_;
       }
     } // namespace dynamic
   } // namespace sot
