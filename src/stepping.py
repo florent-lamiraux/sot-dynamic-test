@@ -16,6 +16,7 @@ from dynamic_graph.sot.dynamics.test import Stepper
 from dynamic_graph import enableTrace, plug
 from dynamic_graph.sot.dynamics.solver import Solver
 from dynamic_graph.sot.core import Multiply_of_matrixHomo
+from dynamic_graph.sot.dynamics import FlexibilityCompensation
 
 rvName = 'hrp'
 
@@ -77,6 +78,17 @@ class Motion(object):
         self.stepper.setMagnitude (0.)
         self.stepper.setMaxComGain(100.)
         robot.stabilizer.setGain2 ((66.84, 45.57, 22.67, -2.14))
+        correction_waist = FlexibilityCompensation ('correction_waist')
+        plug (self.robot.stabilizer.flexPosition, correction_waist.flexPosition)
+        plug (self.robot.stabilizer.flexVelocity, correction_waist.flexVelocity)
+        correction_waist.globalPosition.value = robot.waist.reference.value
+        correction_waist.globalVelocity.value = 6*(0.,)
+        plug (correction_waist.localPosition, robot.waist.reference)
+        plug (correction_waist.localVelocity, robot.waist.velocity)
+
+        plug (robot.stabilizer.stateFlex_inv, self.waistRef.sin1)
+        self.waistRef.sin2.value = robot.waist.reference.value
+        plug (self.waistRef.sout, robot.waist.reference)
         plug(self.stepper.comGain, self.robot.comTask.controlGain)
         plug(self.stepper.comReference, self.robot.comRef)
         plug(self.stepper.comdot, self.robot.comdot)
