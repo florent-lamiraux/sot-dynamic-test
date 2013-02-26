@@ -94,6 +94,8 @@ class Motion(object):
         self.addTrace (self.robot.device.name, 'forceRLEG')
         self.addTrace(self.robot.dynamic.name, 'com')
         self.addTrace(self.robot.device.name, 'robotState')
+        self.addTrace(self.robot.device.name, 'accelerometer')
+        self.addTrace(self.robot.device.name, 'gyrometer')
 
     def addTrace (self, entityName, signalName):
         addTrace (self.robot, self.tracer, entityName, signalName)
